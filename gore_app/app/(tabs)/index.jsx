@@ -12,8 +12,6 @@ export default function TabOneScreen() {
       <Link href={"/mainscreen"}>Mainscreen</Link>
       <Link href={"/submit-timesheet"}>Submit Timesheet</Link>
       {/* //<Link href={"/day-off"}>Day Off</Link> */}
-      
-      
   
       <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
       <EditScreenInfo path="app/(tabs)/index.tsx" />

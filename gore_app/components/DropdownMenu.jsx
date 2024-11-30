@@ -1,96 +1,104 @@
+import React, { useState, useEffect, useMemo } from "react";
+import {
+  View,
+  Text,
+  Button,
+  TextInput,
+  Alert,
+  StyleSheet,
+  TouchableOpacity,
+} from "react-native";
+import Icon from "react-native-vector-icons/MaterialIcons";
+import Modal from "react-native-modal";
+import { FlatList } from "react-native";
 
+const menuOptions = ["Past Timesheets", "Log Out"];
 
-import React, { useRef, useEffect, useState, ReactNode } from 'react';
-import { View, Modal, StyleSheet, TouchableWithoutFeedback, TouchableOpacity } from 'react-native';
+function DropdownMenu({ viewPastTimeSheet, setViewPastTimeSheet }) {
+  const [isModalVisible, setModalVisible] = useState(false);
 
-export const MenuOption = ({
-    onSelect,
-    children,
-}) => {
-    return (
-        <TouchableOpacity onPress={onSelect} style={styles.menuOption}>
-            {children}
-        </TouchableOpacity>
-    );
-};
+  const toggleModal = () => {
+    setModalVisible(prev => !prev);
+  };
 
-const DropdownMenu = ({
-    visible,
-    handleOpen,
-    handleClose,
-    trigger,
-    children,
-    dropdownWidth = 150,
-}) => {
-    const triggerRef = useRef(null);
-    const [position, setPosition] = useState({ x: 0, y: 0, width: 0 });
+  const togglePastTimeSheets = () => {
+    setViewPastTimeSheet((prev) => !prev);
+    toggleModal();
+  };
 
-    useEffect(() => {
-        if (triggerRef.current && visible) {
-            triggerRef.current.measure((fx, fy, width, height, px, py) => {
-                setPosition({
-                    x: px,
-                    y: py + height,
-                    width: width,
-                });
-            });
-        }
-    }, [visible]);
+  return (
+    <>
+      {/* Menu Button */}
+      <TouchableOpacity style={styles.menuButton} onPress={toggleModal}>
+        <Icon name="menu" size={30} color="#fff" />
+      </TouchableOpacity>
 
-    return (
-        <View>
-            <TouchableWithoutFeedback onPress={handleOpen}>
-                <View ref={triggerRef}>{trigger}</View>
-            </TouchableWithoutFeedback>
-            {visible && (
-                <Modal
-                    transparent={true}
-                    visible={visible}
-                    animationType="fade"
-                    onRequestClose={handleClose}>
-                    <TouchableWithoutFeedback onPress={handleClose}>
-                        <View style={styles.modalOverlay}>
-                            <View
-                                style={[
-                                    styles.menu,
-                                    {
-                                        top: position.y,
-                                        left: position.x + position.width / 2 - dropdownWidth / 2,
-                                        width: dropdownWidth,
-                                    },
-                                ]}>
-                                {children}
-                            </View>
-                        </View>
-                    </TouchableWithoutFeedback>
-                </Modal>
+      {/* Modal for Menu Options */}
+      <Modal
+        isVisible={isModalVisible}
+        onBackdropPress={toggleModal} // Close when clicking outside
+        animationIn="fadeIn"
+        animationOut="fadeOut"
+        backdropOpacity={0.5}
+      >
+        <View style={styles.modalContent}>
+          <TouchableOpacity
+            style={styles.option}
+            onPress={togglePastTimeSheets}
+          >
+            <Text style={styles.optionText}>
+              {viewPastTimeSheet ? "Active Timesheet" : "Past Timesheets"}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.option} onPress={() => {}}>
+            <Text style={styles.optionText}>Logout</Text>
+          </TouchableOpacity>
+          {/* <FlatList
+            data={menuOptions}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.option}
+                onPress={() => handleOptionSelect(item)}
+              >
+                <Text style={styles.optionText}>{item}</Text>
+              </TouchableOpacity>
             )}
+          /> */}
         </View>
-    );
-};
+      </Modal>
+    </>
+  );
+}
 
 const styles = StyleSheet.create({
-    modalOverlay: {
-        flex: 1,
-        justifyContent: 'flex-start',
-        alignItems: 'flex-start',
-        backgroundColor: 'transparent',
-    },
-    menu: {
-        position: 'absolute',
-        width: 80,
-        backgroundColor: 'white',
-        borderRadius: 5,
-        padding: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2},
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-        elevation: 4,
-    },
-    menuOption: {
-        padding: 5,
-    },
+  menuButton: {
+    position: "absolute",
+    top: 20, // Adjust for status bar
+    right: 20,
+    backgroundColor: "#6200ee",
+    borderRadius: 50,
+    padding: 10,
+    elevation: 3,
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 10,
+    alignItems: "center",
+  },
+  option: {
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: "#ddd",
+    width: 200,
+    alignItems: "center",
+  },
+  optionText: {
+    fontSize: 16,
+    color: "#333",
+  },
 });
 
 export default DropdownMenu;
