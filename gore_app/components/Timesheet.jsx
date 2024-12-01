@@ -8,8 +8,6 @@ const TimeSheet = ({ tasks }) => {
     return `${hours}h ${minutes}m`;
   };
 
-  console.log(tasks);
-
   // Calculate total time by summing the duration of each task
   const calculateTotalTime = () => {
     let totalHours = 0;

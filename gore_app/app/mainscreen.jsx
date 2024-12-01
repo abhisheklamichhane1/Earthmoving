@@ -18,20 +18,27 @@ import HomeDateTime from "@/components/HomeDateTime";
 import { SafeAreaView } from "react-native-safe-area-context";
 import DropdownMenu from "@/components/DropdownMenu";
 
-const fetchTodayEntries = async (userID, siteID) => {
+const fetchTodayEntries = async (userID, siteID, setTasks) => {
   const { data } = await axios.get(`/TimeEntry/Today/${userID}/${siteID}`);
+  setTasks(data);
   return data;
 };
 
-const fetchPastTimeSheet = async (userID, siteID) => {
-  const response = await axios.get(`/TimeEntry/History/${userID}/${siteID}`);
-  return response.data;
+const fetchPastTimeSheet = async (userID, siteID, setTasks) => {
+  const { data } = await axios.get(`/TimeEntry/History/${userID}/${siteID}`);
+
+  if (data && data?.length > 0) {
+    setTasks(data[0]);
+  }
+
+  return data;
 };
 
 const MainScreen = () => {
   const router = useRouter();
   const { userData } = useUser();
 
+  const [tasks, setTasks] = useState([]);
   const [activePastTSIndex, setActivePastTSIndex] = useState(0);
   const [currentTask, setCurrentTask] = useState(null);
   const [manualEntry, setManualEntry] = useState(false); // State to toggle manual entry
@@ -41,20 +48,15 @@ const MainScreen = () => {
 
   const [viewPastTimeSheet, setViewPastTimeSheet] = useState(false);
 
-  const {
-    data: tasks,
-    isLoading,
-    isError,
-    error,
-  } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ["todayEntries", userData?.userID, userData?.siteID],
-    queryFn: () => fetchTodayEntries(userData?.userID, userData?.siteID),
+    queryFn: () => fetchTodayEntries(userData?.userID, userData?.siteID, setTasks),
     enabled: !!userData?.userID && !!userData?.siteID, // Fetch only if userId and siteId are provided
   });
 
   const { data: pastTimeSheets, isLoading: pastTSLoading } = useQuery({
-    queryKey: ["pastTimeSheet"],
-    queryFn: () => fetchPastTimeSheet(userData?.userID, userData?.siteID),
+    queryKey: ["pastTimeSheet", userData?.userID, userData?.siteID],
+    queryFn: () => fetchPastTimeSheet(userData?.userID, userData?.siteID, setTasks),
     enabled: viewPastTimeSheet && !!userData?.userID && !!userData?.siteID,
   });
 
@@ -68,10 +70,12 @@ const MainScreen = () => {
 
   const handlePastTSNav = (action) => {
     if (action === "prev") {
-      return setActivePastTSIndex(prev => prev - 1);
+      setActivePastTSIndex((prev) => prev - 1);
+      return setTasks(pastTimeSheets[activePastTSIndex - 1]);
     }
 
-    return setActivePastTSIndex(prev => prev + 1);
+    setActivePastTSIndex((prev) => prev + 1);
+    setTasks(pastTimeSheets[activePastTSIndex + 1]);
   };
 
   const handleClockOn = () => {
@@ -162,10 +166,8 @@ const MainScreen = () => {
   };
 
   if (pastTSLoading) {
-    return <Text>Loading...</Text>
+    return <Text>Loading...</Text>;
   }
-
-  console.log(activePastTSIndex);
 
   return (
     <SafeAreaView style={styles.container}>

@@ -30,6 +30,7 @@ const loginSchema = z.object({
 // Login API function
 const loginWithPin = async (data) => {
   const response = await axios.post('/auth/login', data);
+  console.log(response);
   return response.data;
 };
 

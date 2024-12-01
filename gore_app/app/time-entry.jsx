@@ -63,6 +63,17 @@ const createOrUpdateTimeSheetTask = async (data) => {
   return response.data;
 };
 
+const defaultFormValues = (mode, taskDetail) => ({
+  timeFor: taskDetail?.timeFor || '',
+  startTime: mode === "clock_on" ? timeUtils.getCurrentTime() : taskDetail?.startTime || '',
+  finishTime: mode === "clock_off" ? timeUtils.getCurrentTime() : taskDetail?.finishTime || '',
+  jobNo: taskDetail?.jobNo || '',
+  plantNo: taskDetail?.plant || '',
+  workDone: taskDetail?.workDone || '',
+  smhStart: taskDetail?.smhStart || '',
+  smhFinish: taskDetail?.smhFinish || '',
+});
+
 const TimeEntryScreen = () => {
   const { userData } = useUser();
   const { mode, task } = useLocalSearchParams();
@@ -85,19 +96,16 @@ const TimeEntryScreen = () => {
     return "";
   };
 
-  const { control, handleSubmit, watch, setValue, formState: { errors } } = useForm({
+  const { control, handleSubmit, watch, setValue, formState: { errors }, reset } = useForm({
     resolver: zodResolver(timeEntrySchema),
-    defaultValues: {
-      timeFor: taskDetail?.timeFor,
-      startTime: mode === "clock_on" ? timeUtils.getCurrentTime() : handleClockActivity(mode, taskDetail, "startTime"),
-      finishTime: mode === "clock_off" ? timeUtils.getCurrentTime() : handleClockActivity(mode, taskDetail, "finishTime"),
-      jobNo: taskDetail?.jobNo,
-      plantNo: taskDetail?.plant,
-      workDone: taskDetail?.workDone,
-      smhStart: taskDetail?.smhStart,
-      smhFinish: taskDetail?.smhFinish,
-    },
+    defaultValues: defaultFormValues(mode, {}),
   });
+
+  useEffect(() => {
+    if (taskDetail) {
+      reset(defaultFormValues(mode, taskDetail));
+    }
+  }, [taskDetail, mode, reset]);
 
   const startTime = watch('startTime');
   const finishTime = watch('finishTime');
