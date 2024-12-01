@@ -21,6 +21,7 @@ import DropdownMenu from "@/components/DropdownMenu";
 const fetchTodayEntries = async (userID, siteID, setTasks) => {
   const { data } = await axios.get(`/TimeEntry/Today/${userID}/${siteID}`);
   setTasks(data);
+  console.log(data);
   return data;
 };
 
@@ -51,7 +52,7 @@ const MainScreen = () => {
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["todayEntries", userData?.userID, userData?.siteID],
     queryFn: () => fetchTodayEntries(userData?.userID, userData?.siteID, setTasks),
-    enabled: !!userData?.userID && !!userData?.siteID, // Fetch only if userId and siteId are provided
+    enabled: !viewPastTimeSheet && !!userData?.userID && !!userData?.siteID, // Fetch only if userId and siteId are provided
   });
 
   const { data: pastTimeSheets, isLoading: pastTSLoading } = useQuery({
