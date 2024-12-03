@@ -31,7 +31,7 @@ const LightTheme = {
   },
 };
 
-const queryClient = new QueryClient();
+export const queryClient = new QueryClient();
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -79,9 +79,10 @@ function RootLayoutNav() {
       <UserProvider>
         <TaskProvider>
           <ThemeProvider value={LightTheme}>
+            <StatusBar style="dark" />
+
             <SafeAreaProvider>
               <SafeAreaView style={{ flex: 1 }}>
-                <StatusBar style="dark" />
  
                 <Stack screenOptions={{ headerShown: false }}>
                   <Stack.Screen name="login" />

@@ -23,26 +23,27 @@ const getTimeSheetQuestions = async (siteID) => {
 
 const answerTimeSheetQuestions = async (data) => {
   const response = await axios.post(`/questions`, data);
-  console.log("here")
   return response;
 };
 
-const submitTimeSheet = () => {};
+const submitTimeSheet = async (data) => {
+  const response = await axios.post("/dayoff/submit", data);
+  return response;
+};
 
 const SubmitTimesheetScreen = () => {
   const { userData } = useUser();
   const { tasks, totalTime } = useTasks();
-
   const [comments, setComments] = useState("");
-  const [currentDate, setCurrentDate] = useState("");
+
   const {
     control,
     handleSubmit,
     formState: { errors },
   } = useForm({
     defaultValues: {
-      comments: ''
-    }
+      comments: "",
+    },
   });
 
   const { data: questions } = useQuery({
@@ -53,41 +54,25 @@ const SubmitTimesheetScreen = () => {
   const questionMutation = useMutation({
     mutationFn: answerTimeSheetQuestions,
     onSuccess: (data) => {
-      console.log("Questions successfully answered");
     },
   });
   const timeSheetMutation = useMutation({
     mutationFn: submitTimeSheet,
     onSuccess: (data) => {
       console.log(data);
+    },
+    onError: (err) => {
+      console.log(err);
     }
   });
 
-  // Function to get the current day and date
-  const getCurrentDate = () => {
-    const options = {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    };
-    const date = new Date().toLocaleDateString("en-US", options);
-    setCurrentDate(date);
-  };
-
-  // Calculate total time between start and finish time
-  const calculateTotalTime = (startTime, finishTime) => {
-    const start = new Date(`1970-01-01T${startTime}`);
-    const finish = new Date(`1970-01-01T${finishTime}`);
-    const diffMs = finish - start;
-    const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-    return `${diffHrs}h ${diffMins}m`;
-  };
-
   const onSubmit = (data) => {
     const now = new Date();
-    const brisbaneTime = formatInTimeZone(now, 'Australia/Brisbane', 'yyyy-MM-dd HH:mm:ssXXX'); // Format to desired pattern
+    const brisbaneTime = formatInTimeZone(
+      now,
+      "Australia/Brisbane",
+      "yyyy-MM-dd HH:mm:ssXXX"
+    ); // Format to desired pattern
 
     const formattedData = {
       answers: Object.fromEntries(
@@ -95,7 +80,7 @@ const SubmitTimesheetScreen = () => {
           .filter(([key]) => !isNaN(Number(key)))
           .map(([key, value]) => [key, value])
       ),
-      comment: data.comment
+      comment: data.comment,
     };
 
     const common = {
@@ -107,20 +92,20 @@ const SubmitTimesheetScreen = () => {
     const questionData = {
       ...common,
       answers: {
-        ...formattedData.answers
+        ...formattedData.answers,
       },
     };
 
-    // const timeSheetData = {
-    //   ...common,
-    //   submitTime,
-    //   uploadTime,
-    //   dayoffReason,
-    //   comments
-    // };
+    const timeSheetData = {
+      ...common,
+      submitTime: brisbaneTime,
+      uploadTime: brisbaneTime,
+      dayoffreason: "",
+      comments
+    };
 
     questionMutation.mutate(questionData);
-    // Handle form submission logic here
+    timeSheetMutation.mutate(timeSheetData);
   };
 
   return (
@@ -134,7 +119,9 @@ const SubmitTimesheetScreen = () => {
 
       {/* Live Day Information */}
       <View style={styles.headerContainer}>
-        <Text style={styles.headerText}>DAY: {format(new Date(), 'EEEE dd MMMM yyyy')}</Text>
+        <Text style={styles.headerText}>
+          DAY: {format(new Date(), "EEEE dd MMMM yyyy")}
+        </Text>
       </View>
 
       {/* Time Entry Section */}
@@ -147,7 +134,9 @@ const SubmitTimesheetScreen = () => {
           </View>
           <View style={styles.timeField}>
             <Text style={styles.label}>Finish Time:</Text>
-            <Text style={styles.value}>{tasks[tasks?.length - 1].finishTime}</Text>
+            <Text style={styles.value}>
+              {tasks[tasks?.length - 1].finishTime}
+            </Text>
           </View>
           <View style={styles.timeField}>
             <Text style={styles.label}>Total Time:</Text>

@@ -30,7 +30,6 @@ const fetchDayStartQuestions = async () => {
 
 const answerDayStartQuestions = async (answers) => {
   const { data } = await axios.post(`/DayStartQuestions`, answers);
-  console.log("hello");
   return data;
 };
 

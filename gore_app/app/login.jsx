@@ -29,7 +29,6 @@ const loginSchema = z.object({
 // Login API function
 const loginWithPin = async (data) => {
   const response = await axios.post("/auth/login", data);
-  console.log(response);
   return response.data;
 };
 
@@ -64,10 +63,8 @@ export default function LoginScreen() {
       const today = new Date().toLocaleDateString("en-AU"); // Today's date in YYYY-MM-DD format
 
       if (lastTimesheetDate === today) {
-        console.log("Navigating to Main Screen");
         router.replace("/mainscreen"); // Navigate to the main screen
       } else {
-        console.log("Navigating to Day Start Screen");
         await storeData("lastTimesheetDate", today); // Update storage with today's date
         router.replace("/day-start"); // Navigate to the Day Start screen
       }

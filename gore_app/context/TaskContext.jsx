@@ -36,6 +36,7 @@ export function TaskProvider({ children }) {
   const [viewPastTimeSheet, setViewPastTimeSheet] = useState(false);
   const [activePastTSIndex, setActivePastTSIndex] = useState(0);
   const [totalTime, setTotalTime] = useState(null);
+  console.log(userData);
 
   useEffect(() => {
     if (tasks?.length > 0) {
@@ -46,6 +47,14 @@ export function TaskProvider({ children }) {
       setTotalTime(totalTime);
     }
   }, [tasks]);
+  
+  useEffect(() => {
+    // Reset tasks, viewPastTimeSheet, and activePastTSIndex
+    setTasks([]);
+    setViewPastTimeSheet(false);
+    setActivePastTSIndex(0);
+    setTotalTime(null);
+  }, [userData]);
 
   const { data, isLoading: isTaskLoading, isError, error } = useQuery({
     queryKey: ["todayEntries", userData?.userID, userData?.siteID],

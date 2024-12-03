@@ -70,7 +70,7 @@ const TimeSheet = ({ tasks }) => {
         <Text style={styles.totalLabel} colSpan={2}>
           Total Time
         </Text>
-        <Text style={styles.totalValue}>{totalTime || "TDB"}</Text>
+        <Text style={styles.totalValue}>{totalTime || "In Progress"}</Text>
       </View>
     </View>
   );
@@ -118,6 +118,7 @@ const styles = StyleSheet.create({
   },
   totalValue: {
     flex: 3, // Span remaining columns
+    textAlign: "center",
     color: "#333",
   },
 });

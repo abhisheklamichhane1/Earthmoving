@@ -11,10 +11,15 @@ import {
 import Icon from "react-native-vector-icons/MaterialIcons";
 import Modal from "react-native-modal";
 import { FlatList } from "react-native";
+import { removeData } from "@/asyncStorage";
+import { router } from "expo-router";
+import { useUser } from "@/hooks/useUser";
+import { queryClient } from "@/app/_layout";
 
 const menuOptions = ["Past Timesheets", "Log Out"];
 
 function DropdownMenu({ viewPastTimeSheet, setViewPastTimeSheet }) {
+  const { clearUserData } = useUser();
   const [isModalVisible, setModalVisible] = useState(false);
 
   const toggleModal = () => {
@@ -25,6 +30,12 @@ function DropdownMenu({ viewPastTimeSheet, setViewPastTimeSheet }) {
     setViewPastTimeSheet((prev) => !prev);
     toggleModal();
   };
+
+  const handleLogout = async () => {
+    await clearUserData();
+    queryClient.clear();
+    router.replace("/login");
+  }
 
   return (
     <>
@@ -51,7 +62,7 @@ function DropdownMenu({ viewPastTimeSheet, setViewPastTimeSheet }) {
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.option} onPress={() => {}}>
+          <TouchableOpacity style={styles.option} onPress={handleLogout}>
             <Text style={styles.optionText}>Logout</Text>
           </TouchableOpacity>
           {/* <FlatList
