@@ -1,18 +1,79 @@
-import { Picker } from '@react-native-picker/picker';
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { useUser } from "@/hooks/useUser";
+import axios from "@/lib/axios";
+import { Picker } from "@react-native-picker/picker";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz";
+import React, { useState, useEffect } from "react";
+import { Controller, useForm } from "react-hook-form";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+} from "react-native";
+
+const getTimeSheetQuestions = async (siteID) => {
+  const { data } = await axios.get(`/questions/${siteID}`);
+  return data;
+};
+
+const answerTimeSheetQuestions = async (data) => {
+  const response = await axios.post(`/questions`, data);
+  console.log("here")
+  return response;
+};
+
+const submitTimeSheet = () => {}
 
 const SubmitTimesheetScreen = () => {
-  const [campAllowance, setCampAllowance] = useState('No');
-  const [nightShift, setNightShift] = useState('No');
-  const [comments, setComments] = useState('');
-  const [currentDate, setCurrentDate] = useState('');
-  const [totalTime, setTotalTime] = useState('');
+  const { userData } = useUser();
+
+  const [campAllowance, setCampAllowance] = useState("No");
+  const [nightShift, setNightShift] = useState("No");
+  const [comments, setComments] = useState("");
+  const [currentDate, setCurrentDate] = useState("");
+  const [totalTime, setTotalTime] = useState("");
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    defaultValues: {
+      comments: ''
+    }
+  });
+
+  const { data: questions } = useQuery({
+    queryKey: ["TimeSheetQuestions"],
+    queryFn: () => getTimeSheetQuestions(userData?.siteID),
+    enabled: !!userData?.siteID,
+  });
+  const questionMutation = useMutation({
+    mutationFn: answerTimeSheetQuestions,
+    onSuccess: (data) => {
+      console.log("Questions successfully answered");
+    },
+  });
+  const timeSheetMutation = useMutation({
+    mutationFn: submitTimeSheet,
+    onSuccess: (data) => {
+      console.log(data);
+    }
+  });
+  console.log(errors);
 
   // Function to get the current day and date
   const getCurrentDate = () => {
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    const date = new Date().toLocaleDateString('en-US', options);
+    const options = {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    };
+    const date = new Date().toLocaleDateString("en-US", options);
     setCurrentDate(date);
   };
 
@@ -29,17 +90,56 @@ const SubmitTimesheetScreen = () => {
   // Update the total time on component mount
   useEffect(() => {
     getCurrentDate();
-    const startTime = '06:00';
-    const finishTime = '17:30';
+    const startTime = "06:00";
+    const finishTime = "17:30";
     setTotalTime(calculateTotalTime(startTime, finishTime));
   }, []);
+
+  const onSubmit = (data) => {
+    const now = new Date();
+    const brisbaneTime = formatInTimeZone(now, 'Australia/Brisbane', 'yyyy-MM-dd HH:mm:ssXXX'); // Format to desired pattern
+
+    const formattedData = {
+      answers: Object.fromEntries(
+        Object.entries(data)
+          .filter(([key]) => !isNaN(Number(key)))
+          .map(([key, value]) => [key, value])
+      ),
+      comment: data.comment
+    };
+
+    const common = {
+      userID: userData.userID,
+      siteID: userData.siteID,
+      forDate: format(brisbaneTime, "yyyy-MM-dd"),
+    };
+
+    const questionData = {
+      ...common,
+      answers: {
+        ...formattedData.answers
+      },
+    };
+
+    // const timeSheetData = {
+    //   ...common,
+    //   submitTime,
+    //   uploadTime,
+    //   dayoffReason,
+    //   comments
+    // };
+
+    questionMutation.mutate(questionData);
+    // Handle form submission logic here
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       {/* Instructions */}
       <Text style={styles.instructions}>
-        Finished for the day. Please complete the questions below and, if necessary, add any further comments. Then press
-        the "Submit Timesheet" button above to submit this day’s timesheet.
+        Finished for the day. Please complete the questions below and, if
+        necessary, add any further comments. Then press the "Submit Timesheet"
+        button above to submit this day’s timesheet.
       </Text>
 
       {/* Live Day Information */}
@@ -68,47 +168,58 @@ const SubmitTimesheetScreen = () => {
 
       {/* Eligibility Section */}
       <View style={styles.eligibilityContainer}>
-        <Text style={styles.sectionTitle}>Eligibility</Text>
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Eligible for Camp Allowance</Text>
-          <Picker
-            selectedValue={campAllowance}
-            onValueChange={(itemValue) => setCampAllowance(itemValue)}
-            style={styles.picker}
-          >
-            <Picker.Item label="No" value="No" />
-            <Picker.Item label="Yes" value="Yes" />
-          </Picker>
-        </View>
+        <Text style={styles.sectionTitle}>Questions</Text>
 
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Night Shift</Text>
-          <Picker
-            selectedValue={nightShift}
-            onValueChange={(itemValue) => setNightShift(itemValue)}
-            style={styles.picker}
-          >
-            <Picker.Item label="No" value="No" />
-            <Picker.Item label="Yes" value="Yes" />
-          </Picker>
-        </View>
+        {questions?.map((question) => (
+          <View key={question.sequenceNo}>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>{question.questionText}</Text>
+              <Controller
+                control={control}
+                name={`${question.sequenceNo}`}
+                rules={{ required: "This field is required" }}
+                defaultValue={question.defaultValue}
+                render={({ field: { onChange, value } }) => (
+                  <Picker
+                    selectedValue={value}
+                    onValueChange={(itemValue) => onChange(itemValue)}
+                    style={styles.picker}
+                  >
+                    {question.responseCSV.split(",").map((option) => (
+                      <Picker.Item key={option} label={option} value={option} />
+                    ))}
+                  </Picker>
+                )}
+              />
+            </View>
+          </View>
+        ))}
       </View>
 
       {/* Comments Section */}
       <View style={styles.commentsContainer}>
         <Text style={styles.sectionTitle}>Comments</Text>
-        <TextInput
-          style={styles.textArea}
-          value={comments}
-          onChangeText={setComments}
-          placeholder="Add any additional notes here..."
-          multiline
-          numberOfLines={4}
+        <Controller
+          control={control}
+          name="comments"
+          render={({ field: { onChange, value } }) => (
+            <TextInput
+              style={styles.textArea}
+              value={value}
+              onChangeText={onChange}
+              placeholder="Add any additional notes here..."
+              multiline
+              numberOfLines={4}
+            />
+          )}
         />
       </View>
 
       {/* Submit Button */}
-      <TouchableOpacity style={styles.submitButton}>
+      <TouchableOpacity
+        style={styles.submitButton}
+        onPress={handleSubmit(onSubmit)}
+      >
         <Text style={styles.submitText}>Submit Timesheet</Text>
       </TouchableOpacity>
     </ScrollView>
@@ -119,20 +230,20 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     padding: 24,
-    backgroundColor: '#f4f6f8',
+    backgroundColor: "#f4f6f8",
   },
   instructions: {
     fontSize: 16,
-    color: '#6c757d',
+    color: "#6c757d",
     marginBottom: 20,
-    textAlign: 'center',
+    textAlign: "center",
   },
   headerContainer: {
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
     borderRadius: 8,
     padding: 16,
     marginBottom: 20,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 1,
@@ -143,18 +254,18 @@ const styles = StyleSheet.create({
   },
   headerText: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#0d6efd',
-    textAlign: 'center',
+    fontWeight: "bold",
+    color: "#0d6efd",
+    textAlign: "center",
   },
   timeEntryContainer: {
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
     borderRadius: 8,
     padding: 16,
     marginBottom: 20,
-    borderColor: '#ced4da',
+    borderColor: "#ced4da",
     borderWidth: 1,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 1,
@@ -165,37 +276,37 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#495057',
+    fontWeight: "600",
+    color: "#495057",
     marginBottom: 10,
   },
   timeRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   timeField: {
-    alignItems: 'flex-start',
+    alignItems: "flex-start",
     flex: 1,
     marginHorizontal: 5,
   },
   label: {
     fontSize: 14,
-    color: '#495057',
+    color: "#495057",
   },
   value: {
     fontSize: 16,
-    color: '#212529',
-    fontWeight: '600',
+    color: "#212529",
+    fontWeight: "600",
     marginTop: 4,
   },
   eligibilityContainer: {
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
     borderRadius: 8,
     padding: 16,
     marginBottom: 20,
-    borderColor: '#ced4da',
+    borderColor: "#ced4da",
     borderWidth: 1,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 1,
@@ -209,19 +320,19 @@ const styles = StyleSheet.create({
   },
   picker: {
     height: 40,
-    borderColor: '#ced4da',
+    borderColor: "#ced4da",
     borderWidth: 1,
     borderRadius: 8,
-    backgroundColor: '#ffffff',
-    color: '#212529',
+    backgroundColor: "#ffffff",
+    color: "#212529",
   },
   commentsContainer: {
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
     borderRadius: 8,
     padding: 16,
-    borderColor: '#ced4da',
+    borderColor: "#ced4da",
     borderWidth: 1,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 1,
@@ -233,21 +344,21 @@ const styles = StyleSheet.create({
   textArea: {
     padding: 10,
     borderWidth: 1,
-    borderColor: '#ced4da',
+    borderColor: "#ced4da",
     borderRadius: 8,
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
     fontSize: 16,
-    color: '#212529',
+    color: "#212529",
     height: 80,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   submitButton: {
     marginTop: 20,
     paddingVertical: 14,
     borderRadius: 8,
-    backgroundColor: '#0d6efd',
-    alignItems: 'center',
-    shadowColor: '#000',
+    backgroundColor: "#0d6efd",
+    alignItems: "center",
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -257,9 +368,9 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   submitText: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });
 

@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 
 const baseURL = Platform.select({
   web: 'https://localhost:7123',
-  default: 'https://45ff-159-196-12-43.ngrok-free.app', // Fallback
+  default: 'https://5821-159-196-12-43.ngrok-free.app', // Fallback
 });
 
 // Create an Axios instance

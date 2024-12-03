@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
-  Button,
   TextInput,
   Alert,
   StyleSheet,
@@ -17,118 +16,17 @@ import axios from "@/lib/axios";
 import HomeDateTime from "@/components/HomeDateTime";
 import { SafeAreaView } from "react-native-safe-area-context";
 import DropdownMenu from "@/components/DropdownMenu";
-
-const fetchTodayEntries = async (userID, siteID, setTasks) => {
-  const { data } = await axios.get(`/TimeEntry/Today/${userID}/${siteID}`);
-  setTasks(data);
-  console.log(data);
-  return data;
-};
-
-const fetchPastTimeSheet = async (userID, siteID, setTasks) => {
-  const { data } = await axios.get(`/TimeEntry/History/${userID}/${siteID}`);
-
-  if (data && data?.length > 0) {
-    setTasks(data[0]);
-  }
-
-  return data;
-};
+import { useTasks } from "@/hooks/useTasks";
+import ActionButtons from "@/components/ActionButtons";
 
 const MainScreen = () => {
   const router = useRouter();
   const { userData } = useUser();
-
-  const [tasks, setTasks] = useState([]);
-  const [activePastTSIndex, setActivePastTSIndex] = useState(0);
-  const [currentTask, setCurrentTask] = useState(null);
-  const [manualEntry, setManualEntry] = useState(false); // State to toggle manual entry
+  const { tasks, viewPastTimeSheet, setViewPastTimeSheet, pastTSLoading } =
+    useTasks();
 
   const [comment, setComment] = useState("");
   const [isEditingComment, setIsEditingComment] = useState(false);
-
-  const [viewPastTimeSheet, setViewPastTimeSheet] = useState(false);
-
-  const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["todayEntries", userData?.userID, userData?.siteID],
-    queryFn: () => fetchTodayEntries(userData?.userID, userData?.siteID, setTasks),
-    enabled: !viewPastTimeSheet && !!userData?.userID && !!userData?.siteID, // Fetch only if userId and siteId are provided
-  });
-
-  const { data: pastTimeSheets, isLoading: pastTSLoading } = useQuery({
-    queryKey: ["pastTimeSheet", userData?.userID, userData?.siteID],
-    queryFn: () => fetchPastTimeSheet(userData?.userID, userData?.siteID, setTasks),
-    enabled: viewPastTimeSheet && !!userData?.userID && !!userData?.siteID,
-  });
-
-  useEffect(() => {
-    if (userData?.timeEntryType === "M") {
-      setManualEntry(true);
-    } else {
-      setManualEntry(false);
-    }
-  }, [userData]); // Re-run when userData changes
-
-  const handlePastTSNav = (action) => {
-    if (action === "prev") {
-      setActivePastTSIndex((prev) => prev - 1);
-      return setTasks(pastTimeSheets[activePastTSIndex - 1]);
-    }
-
-    setActivePastTSIndex((prev) => prev + 1);
-    setTasks(pastTimeSheets[activePastTSIndex + 1]);
-  };
-
-  const handleClockOn = () => {
-    if (currentTask) {
-      Alert.alert(
-        "Error",
-        "Finish the current task before starting a new one."
-      );
-      return;
-    }
-
-    router.push("/time-entry?mode=clock_on");
-  };
-
-  const checkUnfinishedTask = () => {
-    const startTimeWithEmptyFinishTime = tasks?.find(
-      (task) => task.finishTime === null
-    )?.timeSheetTasksID;
-
-    return startTimeWithEmptyFinishTime; // Output: "16:45"
-  };
-
-  const handleClockOff = () => {
-    const unfinishedTask = checkUnfinishedTask();
-
-    if (tasks?.length < 1 || !unfinishedTask) {
-      Alert.alert("Info", "No task to clock off.");
-      return;
-    }
-
-    router.push(`/time-entry?mode=clock_off&task=${unfinishedTask}`);
-    // currentTask.finishTime = new Date();
-    // setTasks([...tasks]);
-    // setCurrentTask(null);
-  };
-
-  const handleAddTime = () => {
-    router.push("/time-entry?mode=manual");
-    const newTask = {
-      startTime: new Date(),
-      finishTime: new Date(),
-      description: "Manual Task",
-    };
-    setTasks([...tasks, newTask]);
-  };
-
-  const handleSubmitTimesheet = () => {
-    Alert.alert(
-      "Timesheet Submitted",
-      "Your timesheet has been successfully submitted."
-    );
-  };
 
   const renderTaskItem = ({ item }) => (
     <View style={styles.taskItem}>
@@ -196,68 +94,7 @@ const MainScreen = () => {
       <HomeDateTime />
 
       {/* Time Entry Buttons */}
-      <View style={styles.buttonRow}>
-        {viewPastTimeSheet ? (
-          <>
-            <TouchableOpacity
-              style={[styles.button, styles.addButton]}
-              onPress={() => handlePastTSNav("prev")}
-              disabled={activePastTSIndex === 0}
-            >
-              <Text style={styles.buttonText}>Prev</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.button, styles.addButton]}
-              onPress={() => handlePastTSNav("next")}
-              disabled={pastTimeSheets?.length === activePastTSIndex + 1}
-            >
-              <Text style={styles.buttonText}>Next</Text>
-            </TouchableOpacity>
-          </>
-        ) : (
-          <>
-            {manualEntry ? (
-              <>
-                <TouchableOpacity
-                  style={[styles.button, styles.addButton]}
-                  onPress={handleAddTime}
-                >
-                  <Text style={styles.buttonText}>Add Time</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.button, styles.submitButton]}
-                  onPress={handleSubmitTimesheet}
-                >
-                  <Text style={styles.buttonText}>Day Off</Text>
-                </TouchableOpacity>
-              </>
-            ) : (
-              <>
-                <TouchableOpacity
-                  style={[styles.button, styles.clockOnButton]}
-                  onPress={handleClockOn}
-                  disabled={currentTask !== null}
-                >
-                  <Text style={styles.buttonText}>Clock on</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.button, styles.clockOffButton]}
-                  onPress={handleClockOff}
-                  // disabled={currentTask === null}
-                >
-                  <Text style={styles.buttonText}>Clock off</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.button, styles.submitButton]}
-                  onPress={handleSubmitTimesheet}
-                >
-                  <Text style={styles.buttonText}>Day off</Text>
-                </TouchableOpacity>
-              </>
-            )}
-          </>
-        )}
-      </View>
+      <ActionButtons />
 
       {/* Timesheet Table */}
       <TimeSheet tasks={tasks} renderTaskItem={renderTaskItem} />
