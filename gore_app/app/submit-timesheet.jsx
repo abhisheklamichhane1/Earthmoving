@@ -1,12 +1,4 @@
-import { useTasks } from "@/hooks/useTasks";
-import { useUser } from "@/hooks/useUser";
-import axios from "@/lib/axios";
-import { Picker } from "@react-native-picker/picker";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { format } from "date-fns";
-import { formatInTimeZone } from "date-fns-tz";
 import React, { useState, useEffect } from "react";
-import { Controller, useForm } from "react-hook-form";
 import {
   View,
   Text,
@@ -15,6 +7,14 @@ import {
   StyleSheet,
   ScrollView,
 } from "react-native";
+import { Picker } from "@react-native-picker/picker";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz";
+import { Controller, useForm } from "react-hook-form";
+import { useTasks } from "@/hooks/useTasks";
+import { useUser } from "@/hooks/useUser";
+import axios from "@/lib/axios";
 
 const getTimeSheetQuestions = async (siteID) => {
   const { data } = await axios.get(`/questions/${siteID}`);
@@ -27,14 +27,12 @@ const answerTimeSheetQuestions = async (data) => {
   return response;
 };
 
-const submitTimeSheet = () => {}
+const submitTimeSheet = () => {};
 
 const SubmitTimesheetScreen = () => {
   const { userData } = useUser();
   const { tasks, totalTime } = useTasks();
 
-  const [campAllowance, setCampAllowance] = useState("No");
-  const [nightShift, setNightShift] = useState("No");
   const [comments, setComments] = useState("");
   const [currentDate, setCurrentDate] = useState("");
   const {
@@ -136,7 +134,7 @@ const SubmitTimesheetScreen = () => {
 
       {/* Live Day Information */}
       <View style={styles.headerContainer}>
-        <Text style={styles.headerText}>DAY: {currentDate}</Text>
+        <Text style={styles.headerText}>DAY: {format(new Date(), 'EEEE dd MMMM yyyy')}</Text>
       </View>
 
       {/* Time Entry Section */}
