@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, FlatList, StyleSheet } from "react-native";
+import { useTasks } from "@/hooks/useTasks";
+import timeUtils from "@/utils/timeUtils";
 
 const renderTaskItem = ({ item }) => (
   <View style={styles.taskItem}>
@@ -13,28 +15,29 @@ const renderTaskItem = ({ item }) => (
 );
 
 const TimeSheet = ({ tasks }) => {
+  const { totalTime } = useTasks();
   // Convert a time in "hours:minutes" format to "Xh Ym" format
-  const formatTime = (time) => {
-    const [hours, minutes] = time.split(":").map(Number);
-    return `${hours}h ${minutes}m`;
-  };
+  // const formatTime = (time) => {
+  //   const [hours, minutes] = time.split(":").map(Number);
+  //   return `${hours}h ${minutes}m`;
+  // };
 
   // Calculate total time by summing the duration of each task
-  const calculateTotalTime = () => {
-    let totalHours = 0;
-    let totalMinutes = 0;
+  // const calculateTotalTime = () => {
+  //   let totalHours = 0;
+  //   let totalMinutes = 0;
 
-    tasks.forEach((task) => {
-      const [hours, minutes] = task.time.split(":").map(Number);
-      totalHours += hours;
-      totalMinutes += minutes;
-    });
+  //   tasks.forEach((task) => {
+  //     const [hours, minutes] = task.time.split(":").map(Number);
+  //     totalHours += hours;
+  //     totalMinutes += minutes;
+  //   });
 
-    totalHours += Math.floor(totalMinutes / 60);
-    totalMinutes = totalMinutes % 60;
+  //   totalHours += Math.floor(totalMinutes / 60);
+  //   totalMinutes = totalMinutes % 60;
 
-    return `${totalHours}h ${totalMinutes}m`;
-  };
+  //   return `${totalHours}h ${totalMinutes}m`;
+  // };
 
   return (
     <View style={styles.container}>
@@ -55,7 +58,7 @@ const TimeSheet = ({ tasks }) => {
           <View style={styles.row}>
             <Text style={styles.cell}>{item.startTime}</Text>
             <Text style={styles.cell}>{item?.finishTime}</Text>
-            <Text style={styles.cell}>TODO</Text>
+            <Text style={styles.cell}>{timeUtils.calculateTimeDifference(item.startTime, item?.finishTime) || "In Progress"}</Text>
             <Text style={styles.cell}>{item.jobNo}</Text>
             <Text style={styles.cell}>{item.plant}</Text>
           </View>
@@ -67,7 +70,7 @@ const TimeSheet = ({ tasks }) => {
         <Text style={styles.totalLabel} colSpan={2}>
           Total Time
         </Text>
-        <Text style={styles.totalValue}>TODO</Text>
+        <Text style={styles.totalValue}>{totalTime || "TDB"}</Text>
       </View>
     </View>
   );
@@ -115,7 +118,6 @@ const styles = StyleSheet.create({
   },
   totalValue: {
     flex: 3, // Span remaining columns
-    textAlign: "center",
     color: "#333",
   },
 });

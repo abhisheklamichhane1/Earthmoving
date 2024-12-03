@@ -51,6 +51,8 @@ const timeUtils = {
     },
     
     calculateTimeDifference(start, finish) {
+        if (!start || !finish) return 
+
         try {
             const [startHours, startMinutes] = this.convertTo24HourFormat(start);
             const [finishHours, finishMinutes] = this.convertTo24HourFormat(finish);
@@ -68,9 +70,8 @@ const timeUtils = {
             const hours = Math.floor(diffInMinutes / 60);
             const minutes = diffInMinutes % 60;
 
-            return `${hours} ${hours === 1 ? "hour" : "hours"} ${minutes} ${
-                minutes === 1 ? "minute" : "minutes"
-            }`;
+
+            return `${hours}h ${minutes}m`;
         } catch (error) {
             console.error("Time calculation error:", error);
             return "Invalid Time";

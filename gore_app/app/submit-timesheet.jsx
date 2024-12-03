@@ -1,3 +1,4 @@
+import { useTasks } from "@/hooks/useTasks";
 import { useUser } from "@/hooks/useUser";
 import axios from "@/lib/axios";
 import { Picker } from "@react-native-picker/picker";
@@ -30,12 +31,12 @@ const submitTimeSheet = () => {}
 
 const SubmitTimesheetScreen = () => {
   const { userData } = useUser();
+  const { tasks, totalTime } = useTasks();
 
   const [campAllowance, setCampAllowance] = useState("No");
   const [nightShift, setNightShift] = useState("No");
   const [comments, setComments] = useState("");
   const [currentDate, setCurrentDate] = useState("");
-  const [totalTime, setTotalTime] = useState("");
   const {
     control,
     handleSubmit,
@@ -63,7 +64,6 @@ const SubmitTimesheetScreen = () => {
       console.log(data);
     }
   });
-  console.log(errors);
 
   // Function to get the current day and date
   const getCurrentDate = () => {
@@ -86,14 +86,6 @@ const SubmitTimesheetScreen = () => {
     const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
     return `${diffHrs}h ${diffMins}m`;
   };
-
-  // Update the total time on component mount
-  useEffect(() => {
-    getCurrentDate();
-    const startTime = "06:00";
-    const finishTime = "17:30";
-    setTotalTime(calculateTotalTime(startTime, finishTime));
-  }, []);
 
   const onSubmit = (data) => {
     const now = new Date();
@@ -153,11 +145,11 @@ const SubmitTimesheetScreen = () => {
         <View style={styles.timeRow}>
           <View style={styles.timeField}>
             <Text style={styles.label}>Start Time:</Text>
-            <Text style={styles.value}>6:00am</Text>
+            <Text style={styles.value}>{tasks[0].startTime}</Text>
           </View>
           <View style={styles.timeField}>
             <Text style={styles.label}>Finish Time:</Text>
-            <Text style={styles.value}>5:30pm</Text>
+            <Text style={styles.value}>{tasks[tasks?.length - 1].finishTime}</Text>
           </View>
           <View style={styles.timeField}>
             <Text style={styles.label}>Total Time:</Text>
