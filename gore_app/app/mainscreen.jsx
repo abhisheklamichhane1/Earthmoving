@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -7,37 +7,23 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from "react-native";
-import TimeSheet from "@/components/Timesheet";
-import { useRouter } from "expo-router";
-import { useUser } from "@/context/UserContext";
-import { dummyTasks } from "@/dummy-data";
-import { useQuery } from "@tanstack/react-query";
-import axios from "@/lib/axios";
-import HomeDateTime from "@/components/HomeDateTime";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+import TimeSheet from "@/components/Timesheet";
+import HomeDateTime from "@/components/HomeDateTime";
 import DropdownMenu from "@/components/DropdownMenu";
-import { useTasks } from "@/hooks/useTasks";
 import ActionButtons from "@/components/ActionButtons";
 
+import { useUser } from "@/hooks/useUser";
+import { useTasks } from "@/hooks/useTasks";
+
 const MainScreen = () => {
-  const router = useRouter();
   const { userData } = useUser();
   const { tasks, viewPastTimeSheet, setViewPastTimeSheet, pastTSLoading } =
     useTasks();
 
   const [comment, setComment] = useState("");
   const [isEditingComment, setIsEditingComment] = useState(false);
-
-  const renderTaskItem = ({ item }) => (
-    <View style={styles.taskItem}>
-      <Text>Task: {item.description}</Text>
-      <Text>Start: {item.startTime.toLocaleTimeString()}</Text>
-      <Text>
-        Finish:{" "}
-        {item.finishTime ? item.finishTime.toLocaleTimeString() : "In Progress"}
-      </Text>
-    </View>
-  );
 
   const handleCommentEdit = () => {
     setIsEditingComment(true);
@@ -75,8 +61,6 @@ const MainScreen = () => {
         setViewPastTimeSheet={setViewPastTimeSheet}
       />
 
-      {/* <DropdownMenu viewPastTimeSheet={viewPastTimeSheet} setViewPastTimeSheet={setViewPastTimeSheet} /> */}
-
       {/* Time Dashboard Heading */}
       <Text style={styles.heading}>Time Dashboard</Text>
 
@@ -97,7 +81,7 @@ const MainScreen = () => {
       <ActionButtons />
 
       {/* Timesheet Table */}
-      <TimeSheet tasks={tasks} renderTaskItem={renderTaskItem} />
+      <TimeSheet tasks={tasks} />
 
       {/* Comments Section */}
       <TouchableOpacity onPress={handleCommentEdit}>

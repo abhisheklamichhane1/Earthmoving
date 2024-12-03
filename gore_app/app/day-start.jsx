@@ -6,8 +6,8 @@ import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import axios from '@/lib/axios';
-import { useUser } from '@/context/UserContext';
 import { router } from 'expo-router';
+import { useUser } from '@/hooks/useUser';
 
 // Define the Zod schema dynamically based on questions
 const createDynamicSchema = (questions) => {

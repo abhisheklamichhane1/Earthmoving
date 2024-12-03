@@ -5,7 +5,7 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { router, Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import "react-native-reanimated";
@@ -14,6 +14,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useColorScheme } from "@/components/useColorScheme";
 import { UserProvider } from "@/context/UserContext";
 import { TaskProvider } from "@/context/TaskContext";
+import { StatusBar } from "expo-status-bar";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 // Create a light theme by extending DefaultTheme
 const LightTheme = {
@@ -58,6 +60,7 @@ export default function RootLayout() {
   useEffect(() => {
     if (loaded) {
       SplashScreen.hideAsync();
+      router.navigate("/login");
     }
   }, [loaded]);
 
@@ -76,13 +79,21 @@ function RootLayoutNav() {
       <UserProvider>
         <TaskProvider>
           <ThemeProvider value={LightTheme}>
-            <Stack screenOptions={{ headerShown: true }}>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="modal"
-                options={{ headerShown: false, presentation: "modal" }}
-              />
-            </Stack>
+            <SafeAreaProvider>
+              <SafeAreaView style={{ flex: 1 }}>
+                <StatusBar style="dark" />
+ 
+                <Stack screenOptions={{ headerShown: false }}>
+                  <Stack.Screen name="login" />
+                  <Stack.Screen name="day-start" />
+                  <Stack.Screen name="mainscreen" />
+                  <Stack.Screen
+                    name="modal"
+                    options={{ headerShown: false, presentation: "modal" }}
+                  />
+                </Stack>
+              </SafeAreaView>
+            </SafeAreaProvider>
           </ThemeProvider>
         </TaskProvider>
       </UserProvider>
