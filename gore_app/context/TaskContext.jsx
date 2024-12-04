@@ -6,17 +6,26 @@ import React, { useState, createContext, useContext, useEffect } from "react";
 
 const fetchTodayEntries = async (userID, siteID, setTasks) => {
   const { data } = await axios.get(`/TimeEntry/Today/${userID}/${siteID}`);
-  console.log(`/TimeEntry/Today/${userID}/${siteID}`);
   setTasks(data);
   return data;
 };
 
-const fetchPastTimeSheet = async (userID, siteID, setTasks) => {
-  const { data } = await axios.get(`/TimeEntry/History/${userID}/${siteID}`);
+const fetchPastTSDates = async (userID, siteID, setPastTSDates) => {
+  const { data } = await axios.get(`/dayoff/pastdates/${siteID}/${userID}`);
 
-  if (data && data?.length > 0) {
-    setTasks(data[0]);
+  if (Array.isArray(data)) {
+    setPastTSDates(data);
   }
+
+  return data;
+};
+
+const fetchPastTSTasks = async (date, siteID, userID, setTasks) => {
+  const { data } = await axios.get(`/timeentry/history/${userID}/${siteID}/${date}`);
+
+  if (Array.isArray(data)) {
+    setTasks(data);
+  };
 
   return data;
 };
@@ -33,11 +42,13 @@ export const TaskContext = createContext({
 
 export function TaskProvider({ children }) {
   const { userData } = useUser();
+  const [pastTSDates, setPastTSDates] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [viewPastTimeSheet, setViewPastTimeSheet] = useState(false);
   const [activePastTSIndex, setActivePastTSIndex] = useState(0);
   const [totalTime, setTotalTime] = useState(null);
 
+  // total time reset
   useEffect(() => {
     if (tasks?.length > 0) {
       const startTime = tasks[0].startTime;
@@ -51,9 +62,11 @@ export function TaskProvider({ children }) {
     }
   }, [tasks]);
 
+  // Logout actions
   useEffect(() => {
     // Reset tasks, viewPastTimeSheet, and activePastTSIndex
     if (!userData) {
+      setPastTSDates([]);
       setTasks([]);
       setViewPastTimeSheet(false);
       setActivePastTSIndex(0);
@@ -73,21 +86,27 @@ export function TaskProvider({ children }) {
     enabled: !viewPastTimeSheet && !!userData?.userID && !!userData?.siteID, // Fetch only if userId and siteId are provided
   });
 
-  const { data: pastTimeSheets, isLoading: pastTSLoading } = useQuery({
-    queryKey: ["pastTimeSheet", userData?.userID, userData?.siteID],
+  const { data: pastTimeSheetDates, isLoading: pastTSLoading } = useQuery({
+    queryKey: ["pastTSDates", userData?.userID, userData?.siteID],
     queryFn: () =>
-      fetchPastTimeSheet(userData?.userID, userData?.siteID, setTasks),
-    enabled: viewPastTimeSheet && !!userData?.userID && !!userData?.siteID,
+      fetchPastTSDates(userData?.userID, userData?.siteID, setPastTSDates),
+    enabled: !!userData?.userID && !!userData?.siteID,
   });
+
+  const { isLoading: isTSTaskLoading } = useQuery({
+    queryKey: ['pastTSTasks', pastTSDates[activePastTSIndex], userData?.siteID, userData?.userID],
+    queryFn: () => fetchPastTSTasks(pastTSDates[activePastTSIndex], userData?.siteID, userData?.userID, setTasks),
+    enabled: viewPastTimeSheet && pastTSDates[activePastTSIndex] && !!userData?.userID && !!userData?.siteID
+  });
+  console.log(tasks);
 
   const handlePastTSNav = (action) => {
     if (action === "prev") {
-      setActivePastTSIndex((prev) => prev - 1);
-      return setTasks(pastTimeSheets[activePastTSIndex - 1]);
+      return setActivePastTSIndex((prev) => prev - 1);
+      // return setTasks(pastTimeSheets[activePastTSIndex - 1]);
     }
 
-    setActivePastTSIndex((prev) => prev + 1);
-    setTasks(pastTimeSheets[activePastTSIndex + 1]);
+    return setActivePastTSIndex((prev) => prev + 1);
   };
 
   return (
@@ -98,7 +117,7 @@ export function TaskProvider({ children }) {
         viewPastTimeSheet,
         setViewPastTimeSheet,
         pastTSLoading,
-        pastTimeSheets,
+        pastTSDates,
         activePastTSIndex,
         handlePastTSNav,
         totalTime,

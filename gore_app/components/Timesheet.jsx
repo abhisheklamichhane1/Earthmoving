@@ -15,7 +15,8 @@ const renderTaskItem = ({ item }) => (
 );
 
 const TimeSheet = ({ tasks }) => {
-  const { totalTime } = useTasks();
+  const { pastTSDates, totalTime } = useTasks();
+  console.log(pastTSDates);
   // Convert a time in "hours:minutes" format to "Xh Ym" format
   // const formatTime = (time) => {
   //   const [hours, minutes] = time.split(":").map(Number);
