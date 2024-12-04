@@ -57,15 +57,20 @@ export default function LoginScreen() {
     }
   }, [userData, setValue]);
 
-  const handleNavigation = async () => {
+  const handleNavigation = async (userName) => {
     try {
-      const lastTimesheetDate = await getStorageData("lastTimesheetDate"); // Fetch the stored date
+      const lastLogin = await getStorageData("lastLogin"); // Fetch the stored date
+      const lastLoginObj = lastLogin ? JSON.parse(lastLogin) : {};
+      
       const today = new Date().toLocaleDateString("en-AU"); // Today's date in YYYY-MM-DD format
+      const uniqueIdentifier = `${userName}_${today}`;
 
-      if (lastTimesheetDate === today) {
+      if (lastLoginObj.hasOwnProperty(uniqueIdentifier) && lastLoginObj[uniqueIdentifier] === today) {
         router.replace("/mainscreen"); // Navigate to the main screen
       } else {
-        await storeData("lastTimesheetDate", today); // Update storage with today's date
+        const newLoginObj = {...lastLoginObj, [uniqueIdentifier]: today}
+
+        await storeData("lastLogin", JSON.stringify(newLoginObj)); // Update storage with today's date
         router.replace("/day-start"); // Navigate to the Day Start screen
       }
     } catch (error) {
@@ -77,8 +82,6 @@ export default function LoginScreen() {
   const loginMutation = useMutation({
     mutationFn: loginWithPin,
     onSuccess: async (loginData) => {
-      console.log(loginData);
-
       try {
         const {
           siteID,
@@ -111,7 +114,7 @@ export default function LoginScreen() {
 
         Alert.alert("Login Successful", "Welcome!");
 
-        handleNavigation(); // Handle screen navigation based on timesheet logic
+        handleNavigation(userName); // Handle screen navigation based on timesheet logic
       } catch (error) {
         console.log(error);
         Alert.alert("Error", "Failed to save user data locally.");

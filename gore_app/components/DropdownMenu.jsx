@@ -33,7 +33,6 @@ function DropdownMenu({ viewPastTimeSheet, setViewPastTimeSheet }) {
 
   const handleLogout = async () => {
     await clearUserData();
-    queryClient.clear();
     router.replace("/login");
   }
 

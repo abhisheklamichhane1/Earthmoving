@@ -6,19 +6,20 @@ import React, { useState, createContext, useContext, useEffect } from "react";
 
 const fetchTodayEntries = async (userID, siteID, setTasks) => {
   const { data } = await axios.get(`/TimeEntry/Today/${userID}/${siteID}`);
+  console.log(`/TimeEntry/Today/${userID}/${siteID}`);
   setTasks(data);
   return data;
 };
 
 const fetchPastTimeSheet = async (userID, siteID, setTasks) => {
-    const { data } = await axios.get(`/TimeEntry/History/${userID}/${siteID}`);
-  
-    if (data && data?.length > 0) {
-      setTasks(data[0]);
-    }
-  
-    return data;
-  };
+  const { data } = await axios.get(`/TimeEntry/History/${userID}/${siteID}`);
+
+  if (data && data?.length > 0) {
+    setTasks(data[0]);
+  }
+
+  return data;
+};
 
 // Create the context with a default value
 export const TaskContext = createContext({
@@ -36,27 +37,36 @@ export function TaskProvider({ children }) {
   const [viewPastTimeSheet, setViewPastTimeSheet] = useState(false);
   const [activePastTSIndex, setActivePastTSIndex] = useState(0);
   const [totalTime, setTotalTime] = useState(null);
-  console.log(userData);
 
   useEffect(() => {
     if (tasks?.length > 0) {
       const startTime = tasks[0].startTime;
       const finishTime = tasks[tasks.length - 1]?.finishTime;
-      
-      const totalTime = timeUtils.calculateTimeDifference(startTime, finishTime);
+
+      const totalTime = timeUtils.calculateTimeDifference(
+        startTime,
+        finishTime
+      );
       setTotalTime(totalTime);
     }
   }, [tasks]);
-  
+
   useEffect(() => {
     // Reset tasks, viewPastTimeSheet, and activePastTSIndex
-    setTasks([]);
-    setViewPastTimeSheet(false);
-    setActivePastTSIndex(0);
-    setTotalTime(null);
+    if (!userData) {
+      setTasks([]);
+      setViewPastTimeSheet(false);
+      setActivePastTSIndex(0);
+      setTotalTime(null);
+    }
   }, [userData]);
 
-  const { data, isLoading: isTaskLoading, isError, error } = useQuery({
+  const {
+    data,
+    isLoading: isTaskLoading,
+    isError,
+    error,
+  } = useQuery({
     queryKey: ["todayEntries", userData?.userID, userData?.siteID],
     queryFn: () =>
       fetchTodayEntries(userData?.userID, userData?.siteID, setTasks),
@@ -68,8 +78,8 @@ export function TaskProvider({ children }) {
     queryFn: () =>
       fetchPastTimeSheet(userData?.userID, userData?.siteID, setTasks),
     enabled: viewPastTimeSheet && !!userData?.userID && !!userData?.siteID,
-  });  
-  
+  });
+
   const handlePastTSNav = (action) => {
     if (action === "prev") {
       setActivePastTSIndex((prev) => prev - 1);
@@ -91,7 +101,7 @@ export function TaskProvider({ children }) {
         pastTimeSheets,
         activePastTSIndex,
         handlePastTSNav,
-        totalTime
+        totalTime,
       }}
     >
       {children}
