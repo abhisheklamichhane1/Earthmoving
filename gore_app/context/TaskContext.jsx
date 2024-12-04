@@ -98,7 +98,6 @@ export function TaskProvider({ children }) {
     queryFn: () => fetchPastTSTasks(pastTSDates[activePastTSIndex], userData?.siteID, userData?.userID, setTasks),
     enabled: viewPastTimeSheet && pastTSDates[activePastTSIndex] && !!userData?.userID && !!userData?.siteID
   });
-  console.log(tasks);
 
   const handlePastTSNav = (action) => {
     if (action === "prev") {
