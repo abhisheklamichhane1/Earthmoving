@@ -16,6 +16,7 @@ import { UserProvider } from "@/context/UserContext";
 import { TaskProvider } from "@/context/TaskContext";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 // Create a light theme by extending DefaultTheme
 const LightTheme = {
@@ -82,18 +83,19 @@ function RootLayoutNav() {
             <StatusBar style="dark" />
 
             <SafeAreaProvider>
-              <SafeAreaView style={{ flex: 1 }}>
- 
-                <Stack screenOptions={{ headerShown: false }}>
-                  <Stack.Screen name="login" />
-                  <Stack.Screen name="day-start" />
-                  <Stack.Screen name="mainscreen" />
-                  <Stack.Screen
-                    name="modal"
-                    options={{ headerShown: false, presentation: "modal" }}
-                  />
-                </Stack>
-              </SafeAreaView>
+              <GestureHandlerRootView style={{ flex: 1 }}>
+                <SafeAreaView style={{ flex: 1 }}>
+                  <Stack screenOptions={{ headerShown: false }}>
+                    <Stack.Screen name="login" />
+                    <Stack.Screen name="day-start" />
+                    <Stack.Screen name="mainscreen" />
+                    <Stack.Screen
+                      name="modal"
+                      options={{ headerShown: false, presentation: "modal" }}
+                    />
+                  </Stack>
+                </SafeAreaView>
+              </GestureHandlerRootView>
             </SafeAreaProvider>
           </ThemeProvider>
         </TaskProvider>

@@ -123,6 +123,7 @@ export default function LoginScreen() {
     onError: (error) => {
       const errorMessage =
         error?.response?.data?.message || "An unexpected error occurred";
+      console.log(error);
       Alert.alert("Login Failed", errorMessage);
     },
   });

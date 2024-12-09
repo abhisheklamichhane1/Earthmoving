@@ -19,8 +19,9 @@ import { useTasks } from "@/hooks/useTasks";
 
 const MainScreen = () => {
   const { userData } = useUser();
-  const { tasks, viewPastTimeSheet, setViewPastTimeSheet, pastTSLoading } =
+  const { tasks, viewPastTimeSheet, setViewPastTimeSheet, isTaskLoading, isPastTSLoading } =
     useTasks();
+  console.log(tasks);
 
   const [comment, setComment] = useState("");
   const [isEditingComment, setIsEditingComment] = useState(false);
@@ -50,7 +51,7 @@ const MainScreen = () => {
     );
   };
 
-  if (pastTSLoading) {
+  if (isTaskLoading || isPastTSLoading) {
     return <Text>Loading...</Text>;
   }
 

@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { View, Text, FlatList, StyleSheet } from "react-native";
+import { View, Text, FlatList, StyleSheet, TouchableOpacity } from "react-native";
 import { useTasks } from "@/hooks/useTasks";
 import timeUtils from "@/utils/timeUtils";
+import { router } from "expo-router";
 
 const renderTaskItem = ({ item }) => (
   <View style={styles.taskItem}>
@@ -15,8 +16,8 @@ const renderTaskItem = ({ item }) => (
 );
 
 const TimeSheet = ({ tasks }) => {
-  const { pastTSDates, totalTime } = useTasks();
-  console.log(pastTSDates);
+  const { pastTSDates, viewPastTimeSheet, totalTime } = useTasks();
+  
   // Convert a time in "hours:minutes" format to "Xh Ym" format
   // const formatTime = (time) => {
   //   const [hours, minutes] = time.split(":").map(Number);
@@ -40,6 +41,16 @@ const TimeSheet = ({ tasks }) => {
   //   return `${totalHours}h ${totalMinutes}m`;
   // };
 
+  const editTask = (taskID) => {
+    // if (!viewPastTimeSheet && ) {
+
+    // }
+
+    router.push(`/time-entry?task=${taskID}`);
+  }
+
+  console.log(tasks);
+  
   return (
     <View style={styles.container}>
       {/* Table Header */}
@@ -54,15 +65,15 @@ const TimeSheet = ({ tasks }) => {
       {/* Table Rows */}
       <FlatList
         data={tasks}
-        keyExtractor={(item) => item.startTime}
+        keyExtractor={(item) => item.timeSheetTasksID}
         renderItem={({ item }) => (
-          <View style={styles.row}>
+          <TouchableOpacity style={[styles.row, viewPastTimeSheet && styles.pastTSRow]} onPress={() => editTask(item.timeSheetTasksID)}>
             <Text style={styles.cell}>{item.startTime}</Text>
             <Text style={styles.cell}>{item?.finishTime}</Text>
             <Text style={styles.cell}>{timeUtils.calculateTimeDifference(item.startTime, item?.finishTime) || "In Progress"}</Text>
             <Text style={styles.cell}>{item.jobNo}</Text>
             <Text style={styles.cell}>{item.plant}</Text>
-          </View>
+          </TouchableOpacity>
         )}
       />
 
@@ -100,6 +111,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: "#ddd",
   },
+  pastTSRow: {
+    backgroundColor: "#dedede"
+  },  
   cell: {
     flex: 1,
     textAlign: "center",

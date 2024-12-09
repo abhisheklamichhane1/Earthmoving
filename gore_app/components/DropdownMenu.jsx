@@ -1,29 +1,26 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import {
   View,
   Text,
-  Button,
-  TextInput,
-  Alert,
   StyleSheet,
   TouchableOpacity,
+  Button,
+  Alert,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import Modal from "react-native-modal";
-import { FlatList } from "react-native";
-import { removeData } from "@/asyncStorage";
 import { router } from "expo-router";
 import { useUser } from "@/hooks/useUser";
-import { queryClient } from "@/app/_layout";
 
-const menuOptions = ["Past Timesheets", "Log Out"];
+import DiscardTimesheetModal from "./DiscardModal";
 
 function DropdownMenu({ viewPastTimeSheet, setViewPastTimeSheet }) {
   const { clearUserData } = useUser();
   const [isModalVisible, setModalVisible] = useState(false);
+  const [discardModalVisible, setDiscardModalVisible] = useState(false);
 
   const toggleModal = () => {
-    setModalVisible(prev => !prev);
+    setModalVisible((prev) => !prev);
   };
 
   const togglePastTimeSheets = () => {
@@ -34,7 +31,7 @@ function DropdownMenu({ viewPastTimeSheet, setViewPastTimeSheet }) {
   const handleLogout = async () => {
     await clearUserData();
     router.replace("/login");
-  }
+  };
 
   return (
     <>
@@ -61,23 +58,28 @@ function DropdownMenu({ viewPastTimeSheet, setViewPastTimeSheet }) {
             </Text>
           </TouchableOpacity>
 
+          {!viewPastTimeSheet &&           
+            <TouchableOpacity
+              style={styles.option}
+              onPress={() => {
+                setModalVisible(false);
+                setDiscardModalVisible(true);
+              }}
+            >
+              <Text style={styles.optionText}>Discard Timesheet</Text>
+            </TouchableOpacity>
+          }
+
           <TouchableOpacity style={styles.option} onPress={handleLogout}>
             <Text style={styles.optionText}>Logout</Text>
           </TouchableOpacity>
-          {/* <FlatList
-            data={menuOptions}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.option}
-                onPress={() => handleOptionSelect(item)}
-              >
-                <Text style={styles.optionText}>{item}</Text>
-              </TouchableOpacity>
-            )}
-          /> */}
         </View>
       </Modal>
+
+      <DiscardTimesheetModal
+        isVisible={discardModalVisible}
+        onClose={() => setDiscardModalVisible(false)}
+      />
     </>
   );
 }
@@ -108,6 +110,12 @@ const styles = StyleSheet.create({
   optionText: {
     fontSize: 16,
     color: "#333",
+  },
+  contentContainer: {
+    flex: 1,
+    alignItems: "center",
+    zIndex: 9999,
+    backgroundColor: "#efefef",
   },
 });
 

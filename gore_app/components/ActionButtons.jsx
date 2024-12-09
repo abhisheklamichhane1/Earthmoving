@@ -8,7 +8,7 @@ function ActionButtons() {
   const { userData } = useUser();
   const {
     tasks,
-    isTaskLoading,
+    isTSLoading,
     viewPastTimeSheet,
     pastTimeSheets,
     activePastTSIndex,
@@ -93,7 +93,7 @@ function ActionButtons() {
               <TouchableOpacity
                 style={[styles.button, styles.submitButton]}
                 onPress={handleSubmit}
-                disabled={isTaskLoading}
+                disabled={isTSLoading}
               >
                 <Text style={styles.buttonText}>
                   {tasks?.length > 0 ? "Submit" : "Day Off"}
@@ -117,7 +117,7 @@ function ActionButtons() {
               <TouchableOpacity
                 style={[styles.button, styles.submitButton]}
                 onPress={handleSubmit}
-                disabled={isTaskLoading}
+                disabled={isTSLoading}
               >
                 <Text style={styles.buttonText}>
                   {tasks?.length > 0 ? "Submit" : "Day Off"}

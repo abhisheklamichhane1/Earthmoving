@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 
 const baseURL = Platform.select({
   web: 'https://localhost:7123',
-  default: 'https://60e4-159-196-12-43.ngrok-free.app', // Fallback
+  default: 'https://timegems-eca7ewgke4g0asfs.australiaeast-01.azurewebsites.net', // Fallback
 });
 
 // Create an Axios instance
@@ -13,7 +13,7 @@ const axios = Axios.create({
     'Content-Type': 'application/json', // Ensure proper content type
     'X-Requested-With': 'XMLHttpRequest', // This header is sometimes required for AJAX requests
   },
-  withCredentials: true // This ensures that cookies (if any) are included in the request
+  // withCredentials: true // This ensures that cookies (if any) are included in the request
 });
 
 // Optional: Add interceptors if you need to log requests or handle responses globally

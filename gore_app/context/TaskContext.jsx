@@ -6,7 +6,10 @@ import React, { useState, createContext, useContext, useEffect } from "react";
 
 const fetchTodayEntries = async (userID, siteID, setTasks) => {
   const { data } = await axios.get(`/TimeEntry/Today/${userID}/${siteID}`);
-  setTasks(data);
+
+  if (Array.isArray(data)) {
+    setTasks(data);
+  }
   return data;
 };
 
@@ -76,14 +79,14 @@ export function TaskProvider({ children }) {
 
   const {
     data,
-    isLoading: isTaskLoading,
+    isLoading: isTSLoading,
     isError,
     error,
   } = useQuery({
     queryKey: ["todayEntries", userData?.userID, userData?.siteID],
     queryFn: () =>
       fetchTodayEntries(userData?.userID, userData?.siteID, setTasks),
-    enabled: !viewPastTimeSheet && !!userData?.userID && !!userData?.siteID, // Fetch only if userId and siteId are provided
+    enabled: !viewPastTimeSheet && !!userData?.userID && !!userData?.siteID,
   });
 
   const { data: pastTimeSheetDates, isLoading: pastTSLoading } = useQuery({
@@ -93,26 +96,26 @@ export function TaskProvider({ children }) {
     enabled: !!userData?.userID && !!userData?.siteID,
   });
 
-  const { isLoading: isTSTaskLoading } = useQuery({
+  const { isLoading: isPastTSLoading } = useQuery({
     queryKey: ['pastTSTasks', pastTSDates[activePastTSIndex], userData?.siteID, userData?.userID],
     queryFn: () => fetchPastTSTasks(pastTSDates[activePastTSIndex], userData?.siteID, userData?.userID, setTasks),
     enabled: viewPastTimeSheet && pastTSDates[activePastTSIndex] && !!userData?.userID && !!userData?.siteID
   });
 
   const handlePastTSNav = (action) => {
-    if (action === "prev") {
+    if (action === "prev" && activePastTSIndex > 0) {
       return setActivePastTSIndex((prev) => prev - 1);
-      // return setTasks(pastTimeSheets[activePastTSIndex - 1]);
+    } else if (activePastTSIndex + 1 < pastTSDates.length) {
+      return setActivePastTSIndex((prev) => prev + 1);
     }
-
-    return setActivePastTSIndex((prev) => prev + 1);
   };
 
   return (
     <TaskContext.Provider
       value={{
         tasks,
-        isTaskLoading,
+        isTSLoading,
+        isPastTSLoading,
         viewPastTimeSheet,
         setViewPastTimeSheet,
         pastTSLoading,

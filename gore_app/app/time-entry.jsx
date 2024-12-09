@@ -79,6 +79,7 @@ const TimeEntryScreen = () => {
   const { mode, task } = useLocalSearchParams();
   const queryClient = useQueryClient();
   const [showPicker, setShowPicker] = React.useState({ start: false, finish: false });
+  console.log(task);
 
   const { data: taskDetail } = useQuery({
     queryKey: ['taskDetail', task],
